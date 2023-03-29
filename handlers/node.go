@@ -28,7 +28,7 @@ func AddNode(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func Deletenode(c echo.Context) error {
+func DeleteNode(c echo.Context) error {
 	params := new(contracts.NodeDeleteRequest)
 
 	if err := c.Bind(params); err != nil {

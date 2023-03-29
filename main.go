@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/api"
+	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/common"
 
 	"github.com/labstack/echo"
 )
@@ -14,6 +15,6 @@ func main() {
 
 	e.Start(":8000")
 
-	go common.healthCheck()
+	go common.HealthCheck()
 
 }

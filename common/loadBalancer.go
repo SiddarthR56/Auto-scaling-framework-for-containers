@@ -71,7 +71,7 @@ func (s *NodePool) GetNextPeer() *Backend {
 	return nil
 }
 
-func lb(w http.ResponseWriter, r *http.Request) {
+func Lb(w http.ResponseWriter, r *http.Request) {
 
 	peer := node_pool.GetNextPeer()
 	if peer != nil {
@@ -81,7 +81,7 @@ func lb(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Service not available", http.StatusServiceUnavailable)
 }
 
-func healthCheck() {
+func HealthCheck() {
 	t := time.NewTicker(time.Minute * 2)
 	for {
 		select {
