@@ -1,15 +1,11 @@
 package common
 
 import (
-	"context"
-	"flag"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -25,19 +21,19 @@ type Backend struct {
 
 type NodePool struct {
 	backends []*Backend
-	curInd  uint64
+	curInd   uint64
 }
 
-func (s *NodePool) AddContainer(nodeip *string, port *string) {
-	containerUrl, err := url.Parse(node_ip+":"+port)
+func (s *NodePool) AddContainer(nodeip string, port string) {
+	containerUrl, err := url.Parse(nodeip + ":" + port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(containerUrl)
 	s.backends = append(s.backends, &Backend{
-			URL: containerUrl,
-			ReverseProxy: proxy,
-		})
+		URL:          containerUrl,
+		ReverseProxy: proxy,
+	})
 }
 
 func (s *NodePool) DeleteContainer(nodeip *string, port *string) {
@@ -45,7 +41,7 @@ func (s *NodePool) DeleteContainer(nodeip *string, port *string) {
 }
 
 func isBackendAlive(u *url.URL) bool {
-	conn, err := net.DialTimeout("tcp", u.Host, 10 * time.Second)
+	conn, err := net.DialTimeout("tcp", u.Host, 10*time.Second)
 	if err != nil {
 		log.Println("Site unreachable, error: ", err)
 		return false
@@ -65,11 +61,10 @@ func (s *NodePool) HealthCheck() {
 }
 
 func (s *NodePool) GetNextPeer() *Backend {
-	if len(s.backends) != 0 
-	{
+	if len(s.backends) != 0 {
 		next := int(atomic.AddUint64(&s.curInd, uint64(1)) % uint64(len(s.backends)))
 
-		atomic.StoreUint64(&s.curInd, next)
+		atomic.StoreUint64(&s.curInd, uint64(next))
 
 		return s.backends[next]
 	}
@@ -78,7 +73,7 @@ func (s *NodePool) GetNextPeer() *Backend {
 
 func lb(w http.ResponseWriter, r *http.Request) {
 
-	peer := NodePool.GetNextPeer()
+	peer := node_pool.GetNextPeer()
 	if peer != nil {
 		peer.ReverseProxy.ServeHTTP(w, r)
 		return
@@ -91,9 +86,8 @@ func healthCheck() {
 	for {
 		select {
 		case <-t.C:
-			NodePool.HealthCheck()
+			node_pool.HealthCheck()
 			log.Println("Health check completed")
 		}
 	}
 }
-

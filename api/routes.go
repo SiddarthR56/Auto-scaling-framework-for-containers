@@ -1,14 +1,11 @@
 package api
 
 import (
-
-	"fmt"
-	"handlers"
+	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/handlers"
 	"github.com/labstack/echo/v4"
-
 )
 
-func SetApiRoutes (e *echo.Echo) {
+func SetApiRoutes(e *echo.Echo) {
 
 	api := e.Group("/api")
 

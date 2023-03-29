@@ -1,16 +1,18 @@
 package handlers
 
 import (
-	"fmt"
-	"common"
-	"contracts"
+	"net/http"
+
+	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/common"
+	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/contracts"
+
 	"github.com/labstack/echo"
 )
 
 func AddNode(c echo.Context) error {
 	params := new(contracts.NodeAddRequest)
 
-	if err := ctx.Bind(params); err != nil {
+	if err := c.Bind(params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
@@ -23,13 +25,13 @@ func AddNode(c echo.Context) error {
 	message := "Node was Added"
 	response := contracts.BaseResponse{}
 	response.Message = &message
-	return ctx.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }
 
 func Deletenode(c echo.Context) error {
-	params := new(contracts.NodeDeleteRequest)	
+	params := new(contracts.NodeDeleteRequest)
 
-	if err := ctx.Bind(params); err != nil {
+	if err := c.Bind(params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
@@ -42,6 +44,6 @@ func Deletenode(c echo.Context) error {
 	message := "Node was Deleted"
 	response := contracts.BaseResponse{}
 	response.Message = &message
-	return ctx.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 
 }

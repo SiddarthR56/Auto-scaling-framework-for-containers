@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"net/http"
-	"common"
+	"github.com/labstack/echo"
 )
 
 func ProxyRequest(c echo.Context) error {
 	common.lb(c.Response().Writer, c.Request())
+	return nil
 }
