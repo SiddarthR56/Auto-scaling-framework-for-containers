@@ -25,7 +25,7 @@ type NodePool struct {
 }
 
 func (s *NodePool) AddContainer(nodeip string, port string) {
-	containerUrl, err := url.Parse(nodeip + ":" + port)
+	containerUrl, err := url.Parse("http://" + nodeip + ":" + port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func (s *NodePool) GetNextPeer() *Backend {
 
 func Lb(w http.ResponseWriter, r *http.Request) {
 
-	peer := node_pool.GetNextPeer()
+	peer := Node_pool.GetNextPeer()
 	if peer != nil {
 		peer.ReverseProxy.ServeHTTP(w, r)
 		return
@@ -86,7 +86,7 @@ func HealthCheck() {
 	for {
 		select {
 		case <-t.C:
-			node_pool.HealthCheck()
+			Node_pool.HealthCheck()
 			log.Println("Health check completed")
 		}
 	}
