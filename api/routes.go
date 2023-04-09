@@ -10,7 +10,7 @@ import (
 
 func SetApiRoutes(e *echo.Echo) {
 
-	url1, _ := url.Parse("http://localhost:8081")
+	url1, _ := url.Parse("http://152.7.178.161:3000")
 
 	targets := []*middleware.ProxyTarget{
 		{
@@ -26,7 +26,7 @@ func SetApiRoutes(e *echo.Echo) {
 
 	api.POST("/frequest", handlers.ProxyRequest)
 
-	g := e.Group("/blog")
+	g := e.Group("/")
 	g.Use(middleware.Proxy(middleware.NewRoundRobinBalancer(targets)))
 
 }
