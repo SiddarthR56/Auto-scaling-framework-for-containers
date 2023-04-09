@@ -2,4 +2,4 @@ package common
 
 var NodeList map[string]Node
 
-var node_pool NodePool
+var Node_pool NodePool

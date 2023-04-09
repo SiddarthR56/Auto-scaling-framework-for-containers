@@ -13,8 +13,10 @@ func main() {
 
 	api.SetApiRoutes(e)
 
+	common.Node_pool.AddContainer("127.0.0.1", "2000")
+
 	e.Start(":8000")
 
-	go common.HealthCheck()
+	//go common.HealthCheck()
 
 }
