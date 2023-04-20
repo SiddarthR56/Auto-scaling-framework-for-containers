@@ -8,7 +8,6 @@ import (
 )
 
 func ProxyRequest(c echo.Context) error {
-	fmt.Println("Request came")
 	common.Lb(c.Response().Writer, c.Request())
 	return c.JSON(http.StatusOK, "Message: Ok")
 }
