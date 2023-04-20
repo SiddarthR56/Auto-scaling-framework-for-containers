@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo"
 )
 
+// Main function
 func main() {
 
 	e := echo.New()
