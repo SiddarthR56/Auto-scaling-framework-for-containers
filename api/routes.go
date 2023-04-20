@@ -13,6 +13,6 @@ func SetApiRoutes(e *echo.Echo) {
 
 	api.POST("/deletenode", handlers.DeleteNode)
 
-	api.POST("/", handlers.ProxyRequest)
+	api.GET("/PHP", handlers.ProxyRequest)
 
 }
