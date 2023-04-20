@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"fmt"
 	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/common"
 	"github.com/labstack/echo"
 )
