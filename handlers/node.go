@@ -71,7 +71,7 @@ func CreateContainer(funcName string, numContainers string, nodeip string, nodep
 
 	port := result["port"].(string)
 
-	common.Node_pool.AddContainer(nodeip, port)
+	common.AddContainer(nodeip, port)
 
 	return nil
 

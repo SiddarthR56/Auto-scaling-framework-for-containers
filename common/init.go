@@ -1,5 +1,7 @@
 package common
 
+import "github.com/labstack/echo/middleware"
+
 var NodeList map[string]Node
 
-var Node_pool NodePool
+var Targets []*middleware.ProxyTarget

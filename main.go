@@ -14,9 +14,9 @@ func main() {
 
 	api.SetApiRoutes(e)
 
-	common.Node_pool.AddContainer("152.7.176.37", "30001")
-	common.Node_pool.AddContainer("152.7.176.37", "30002")
-	common.Node_pool.AddContainer("152.7.176.37", "30003")
+	common.AddContainer("152.7.176.37", "30001")
+	common.AddContainer("152.7.176.37", "30002")
+	common.AddContainer("152.7.176.37", "30003")
 
 	e.Start(":8000")
 
