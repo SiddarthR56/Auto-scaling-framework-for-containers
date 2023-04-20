@@ -19,7 +19,3 @@ type NodeContainerRequest struct {
 	AppImage      *string `json:"App_Image"`
 	NewContainers *string `json:"Number_Containers"`
 }
-
-type NodeContainerResponse struct {
-	Port *string `json:"Port_number"`
-}
