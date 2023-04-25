@@ -12,6 +12,5 @@ func AddContainer(nodeip string, port string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// s = append(s, &middleware.ProxyTarget{URL: containerUrl})
 	Targets = append(Targets, &middleware.ProxyTarget{URL: containerUrl})
 }
