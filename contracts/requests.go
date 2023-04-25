@@ -19,3 +19,7 @@ type NodeContainerRequest struct {
 	AppImage      *string `json:"App_Image"`
 	NewContainers *string `json:"Number_Containers"`
 }
+
+type ContainerRestartRequest struct {
+	ContainerId *string `json:"container_id"`
+}

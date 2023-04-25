@@ -7,11 +7,13 @@ import (
 
 func SetApiRoutes(e *echo.Echo) {
 
-	api := e.Group("/")
+	api := e.Group("/admin")
 
 	api.POST("/addnode", handlers.AddNode)
 
 	api.POST("/deletenode", handlers.DeleteNode)
+
+	api.POST("containerrestart", handlers.ContainerRestart)
 
 	e.GET("/*", handlers.ProxyRequest)
 

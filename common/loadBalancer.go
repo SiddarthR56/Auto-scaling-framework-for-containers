@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -74,6 +75,7 @@ func (s *NodePool) GetNextPeer() *Backend {
 func Lb(w http.ResponseWriter, r *http.Request) {
 
 	peer := Node_pool.GetNextPeer()
+	fmt.Println(peer)
 	if peer != nil {
 		peer.ReverseProxy.ServeHTTP(w, r)
 		return
