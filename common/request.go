@@ -19,3 +19,15 @@ func MakePostRequest(url string, payload []byte) (map[string]interface{}, error)
 	json.NewDecoder(resp.Body).Decode(&res)
 	return res, nil
 }
+
+func MakeGetRequest(url string) (map[string]interface{}, error) {
+	response, err := http.Get(url)
+	
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	var res map[string]interface{}
+	json.NewDecoder(response.Body).Decode(&res)
+	return res, nil
+}

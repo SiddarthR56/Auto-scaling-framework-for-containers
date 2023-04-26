@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -53,18 +53,18 @@ func DeleteNode(c echo.Context) error {
 
 func NodeCreateContainer(funcName string, nodeip string, nodeport string) error {
 
-	url := fmt.Sprintf("http://%s:%s/api/createcontainer", nodeip, nodeport)
+	url := fmt.Sprintf("http://%s:%s/container/create/%s", nodeip, nodeport, funcName)
 
-	request := map[string]string{
-		"function_name": funcName,
-	}
+	// request := map[string]string{
+	// 	"function_name": funcName,
+	// }
 
-	req, err := json.Marshal(request)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	// req, err := json.Marshal(request)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
 
-	result, err := common.MakePostRequest(url, req)
+	result, err := common.MakeGetRequest(url)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -76,6 +76,8 @@ func NodeCreateContainer(funcName string, nodeip string, nodeport string) error 
 
 	common.Node_pool.AddContainer(nodeip, port, containerId)
 
+	fmt.Println("Container " + containerId + " created and added to Node_List")
+
 	return nil
 
 }
@@ -84,21 +86,23 @@ func NodeDeleteContainer(container_id string, nodeip string, nodeport string) er
 
 	time.Sleep(30 * time.Second)
 
-	url := fmt.Sprintf("http://%s:%s/api/deletecontainer", nodeip, nodeport)
+	url := fmt.Sprintf("http://%s:%s/container/delete/%s", nodeip, nodeport, container_id)
 
-	request := map[string]string{
-		"container_id": container_id,
-	}
+	// request := map[string]string{
+	// 	"container_id": container_id,
+	// }
 
-	req, err := json.Marshal(request)
+	// req, err := json.Marshal(request)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+
+	_, err := common.MakeGetRequest(url)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	_, err = common.MakePostRequest(url, req)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	fmt.Println("Container " + container_id + " deleted")
 
 	return nil
 
