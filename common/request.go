@@ -17,6 +17,5 @@ func MakePostRequest(url string, payload []byte) (map[string]interface{}, error)
 	}
 	var res map[string]interface{}
 	json.NewDecoder(resp.Body).Decode(&res)
-	// fmt.Println(res["json"])
 	return res, nil
 }

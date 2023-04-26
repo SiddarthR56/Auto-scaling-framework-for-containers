@@ -77,13 +77,12 @@ func ContainerRestart(c echo.Context) error {
 	return nil
 }
 
-func CreateContainer(funcName string, numContainers string, nodeip string, nodeport string) error {
+func CreateContainer(funcName string, nodeip string, nodeport string) error {
 
 	url := fmt.Sprintf("http://%s:%s/api/createcontainer", nodeip, nodeport)
 
 	request := map[string]string{
 		"function_name": funcName,
-		"numContainers": numContainers,
 	}
 
 	req, err := json.Marshal(request)
@@ -102,6 +101,28 @@ func CreateContainer(funcName string, numContainers string, nodeip string, nodep
 	common.ContainerList[containerId] = fmt.Sprintf("http://%s:%s/api/restartcontainer", nodeip, nodeport)
 
 	common.Node_pool.AddContainer(nodeip, port)
+
+	return nil
+
+}
+
+func DeleteContainer(funcName string, nodeip string, nodeport string) error {
+
+	url := fmt.Sprintf("http://%s:%s/api/deletecontainer", nodeip, nodeport)
+
+	request := map[string]string{
+		"function_name": funcName,
+	}
+
+	req, err := json.Marshal(request)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	_, err = common.MakePostRequest(url, req)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	return nil
 

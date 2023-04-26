@@ -13,8 +13,13 @@ func SetApiRoutes(e *echo.Echo) {
 
 	api.POST("/deletenode", handlers.DeleteNode)
 
-	api.POST("containerrestart", handlers.ContainerRestart)
+	api.POST("/containerrestart", handlers.ContainerRestart)
+
+	api.POST("/containeradd", handlers.ContainerAdd)
+
+	api.POST("/containerdelete", handlers.ContainerDelete)
 
 	e.GET("/*", handlers.ProxyRequest)
+	e.POST("/*", handlers.ProxyRequest)
 
 }

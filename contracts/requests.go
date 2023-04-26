@@ -15,11 +15,11 @@ type NodeDeleteRequest struct {
 	NodeId *string `json:"node_id"`
 }
 
-type NodeContainerRequest struct {
-	AppImage      *string `json:"App_Image"`
-	NewContainers *string `json:"Number_Containers"`
-}
-
 type ContainerRestartRequest struct {
 	ContainerId *string `json:"container_id"`
+}
+
+type ContainerModifyRequest struct {
+	AppName      *string `json:"app_name"`
+	ContainerNum *int    `json:"container_num"`
 }

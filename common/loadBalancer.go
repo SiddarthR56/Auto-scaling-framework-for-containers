@@ -38,7 +38,13 @@ func (s *NodePool) AddContainer(nodeip string, port string) {
 }
 
 func (s *NodePool) DeleteContainer(nodeip *string, port *string) {
-	//Remove from Backend
+	for i, b := range s.backends {
+		if b.URL.Host == fmt.Sprintf("%s:%s", *nodeip, *port) {
+			mux.Lock()
+			s.backends = append(s.backends[:i], s.backends[i+1:]...)
+			mux.Unlock()
+		}
+	}
 }
 
 func isBackendAlive(u *url.URL) bool {

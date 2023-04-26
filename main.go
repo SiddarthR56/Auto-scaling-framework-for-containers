@@ -18,8 +18,8 @@ func main() {
 	common.Node_pool.AddContainer("152.7.176.37", "30002")
 	common.Node_pool.AddContainer("152.7.176.37", "30003")
 
-	e.Start(":8000")
-
 	//go common.HealthCheck()
+
+	e.Start(":8000")
 
 }
