@@ -9,6 +9,8 @@ func SetApiRoutes(e *echo.Echo) {
 
 	api := e.Group("/admin")
 
+	api.POST("/addapplication", handlers.AddApplication)
+
 	api.POST("/addnode", handlers.AddNode)
 
 	api.POST("/deletenode", handlers.DeleteNode)
