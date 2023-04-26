@@ -17,17 +17,17 @@ tag = '_measurement'
 tag_val = 'metrics'
 
 def get_new_data():
-    cpu_mem_tables =    client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
-                                                |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
-                                                |> truncateTimeColumn(unit: 1s) \
-                                                |> sort(columns: ["_time"]) \
-                                                |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
+    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
+                                            |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
+                                            |> truncateTimeColumn(unit: 1s) \
+                                            |> sort(columns: ["_time"]) \
+                                            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
     
-    rps_tables =        client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
-                                                |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
-                                                |> truncateTimeColumn(unit: 1s) \
-                                                |> sort(columns: ["_time"]) \
-                                                |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
+    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
+                                        |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
+                                        |> truncateTimeColumn(unit: 1s) \
+                                        |> sort(columns: ["_time"]) \
+                                        |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
 
     result = defaultdict(dict)
 
