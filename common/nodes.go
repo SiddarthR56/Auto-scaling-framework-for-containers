@@ -12,7 +12,7 @@ type NodeList struct {
 	curInd uint64
 }
 
-func AddNode(n Node) error {
+func AddNodeInt(n Node) error {
 	Node_Map[*n.NodeIp] = n
 	Node_List.nodes = append(Node_List.nodes, &n)
 	return nil
@@ -29,8 +29,12 @@ func (s *NodeList) GetNextPeer() *Node {
 	return nil
 }
 
-func DeleteNode(n Node) error {
+func DeleteNodeInt(n Node) error {
 	delete(Node_Map, *n.NodeIp)
-	Node_List.nodes = append(Node_List.nodes, &n)
+	for i, b := range Node_List.nodes {
+		if *b.NodeIp == *n.NodeIp {
+			Node_List.nodes = append(Node_List.nodes[:i], Node_List.nodes[i+1:]...)
+		}
+	}
 	return nil
 }

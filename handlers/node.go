@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/common"
 	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/contracts"
@@ -22,7 +23,7 @@ func AddNode(c echo.Context) error {
 	n.NodeIp = params.NodeIp
 	n.NodeId = params.NodeId
 
-	common.AddNode(n)
+	common.AddNodeInt(n)
 
 	message := "Node was Added"
 	response := contracts.BaseResponse{}
@@ -41,7 +42,7 @@ func DeleteNode(c echo.Context) error {
 	n.NodeIp = params.NodeIp
 	n.NodeId = params.NodeId
 
-	common.DeleteNode(n)
+	common.DeleteNodeInt(n)
 
 	message := "Node was Deleted"
 	response := contracts.BaseResponse{}
@@ -50,34 +51,7 @@ func DeleteNode(c echo.Context) error {
 
 }
 
-func ContainerRestart(c echo.Context) error {
-
-	params := new(contracts.ContainerRestartRequest)
-
-	if err := c.Bind(params); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
-	containerId := params.ContainerId
-
-	request := map[string]string{
-		"container_id": *containerId,
-	}
-
-	req, err := json.Marshal(request)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	_, err = common.MakePostRequest(common.ContainerList[*containerId], req)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	return nil
-}
-
-func CreateContainer(funcName string, nodeip string, nodeport string) error {
+func NodeCreateContainer(funcName string, nodeip string, nodeport string) error {
 
 	url := fmt.Sprintf("http://%s:%s/api/createcontainer", nodeip, nodeport)
 
@@ -98,20 +72,22 @@ func CreateContainer(funcName string, nodeip string, nodeport string) error {
 	port := result["port"].(string)
 	containerId := result["container_id"].(string)
 
-	common.ContainerList[containerId] = fmt.Sprintf("http://%s:%s/api/restartcontainer", nodeip, nodeport)
+	common.ContainerList[containerId] = nodeip
 
-	common.Node_pool.AddContainer(nodeip, port)
+	common.Node_pool.AddContainer(nodeip, port, containerId)
 
 	return nil
 
 }
 
-func DeleteContainer(funcName string, nodeip string, nodeport string) error {
+func NodeDeleteContainer(container_id string, nodeip string, nodeport string) error {
+
+	time.Sleep(30 * time.Second)
 
 	url := fmt.Sprintf("http://%s:%s/api/deletecontainer", nodeip, nodeport)
 
 	request := map[string]string{
-		"function_name": funcName,
+		"container_id": container_id,
 	}
 
 	req, err := json.Marshal(request)

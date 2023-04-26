@@ -8,4 +8,8 @@ var Node_pool NodePool
 
 var Node_List NodeList
 
-var WNODE_PORT string = "8080"
+var AppNameMap map[string]NodePool
+
+var WNODE_PORT string = "8000"
+
+var AppImageMap map[string]string

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/SiddarthR56/Auto-scaling-framework-for-containers/common"
@@ -24,9 +25,11 @@ func ContainerAdd(c echo.Context) error {
 	Application := params.AppName
 	ContainerNumber := params.ContainerNum
 
+	fmt.Println("Application Name: ", *Application)
+
 	for i := 0; i < *ContainerNumber; i++ {
 		node := common.Node_List.GetNextPeer()
-		CreateContainer(*Application, *node.NodeIp, common.WNODE_PORT)
+		NodeCreateContainer(*Application, *node.NodeIp, common.WNODE_PORT)
 	}
 
 	message := "Container was Added"
@@ -43,16 +46,60 @@ func ContainerDelete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	Application := params.AppName
+	// Application := params.AppName
+	// pool:= common.AppNameMap[*Application]
 	ContainerNumber := params.ContainerNum
 
 	for i := 0; i < *ContainerNumber; i++ {
-		node := common.Node_List.GetNextPeer()
-		//common.Node_List.DeleteContainer(*node.NodeIp, *node)
-		DeleteContainer(*Application, *node.NodeIp, common.WNODE_PORT)
+		node := common.Node_pool.GetNextPeer()
+		common.Node_pool.DeleteSpecificContainer(node.ContainerID)
+
+		go NodeDeleteContainer(node.ContainerID, common.ContainerList[node.ContainerID], common.WNODE_PORT)
 	}
 
 	message := "Container was Deleted"
+	response := contracts.BaseResponse{}
+	response.Message = &message
+	return c.JSON(http.StatusOK, response)
+
+}
+
+func ContainerRestart(c echo.Context) error {
+
+	params := new(contracts.ContainerRestartRequest)
+
+	if err := c.Bind(params); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	containerId := params.ContainerId
+
+	common.Node_pool.DeleteSpecificContainer(*containerId)
+
+	go NodeDeleteContainer(*containerId, common.ContainerList[*containerId], common.WNODE_PORT)
+
+	return nil
+}
+
+func AddApplication(c echo.Context) error {
+
+	params := new(contracts.AppAddRequest)
+
+	if err := c.Bind(params); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	ApplicationName := params.AppName
+	ApplicationImage := params.AppImage
+
+	common.AppImageMap[*ApplicationName] = *ApplicationImage
+
+	fmt.Println("Adding Application: ", *ApplicationName)
+
+	node := common.Node_List.GetNextPeer()
+	NodeCreateContainer(*ApplicationImage, *node.NodeIp, common.WNODE_PORT)
+
+	message := "Application was Added"
 	response := contracts.BaseResponse{}
 	response.Message = &message
 	return c.JSON(http.StatusOK, response)

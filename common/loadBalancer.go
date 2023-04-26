@@ -18,6 +18,7 @@ type Backend struct {
 	URL          *url.URL
 	mux          sync.RWMutex
 	ReverseProxy *httputil.ReverseProxy
+	ContainerID  string
 }
 
 type NodePool struct {
@@ -25,7 +26,7 @@ type NodePool struct {
 	curInd   uint64
 }
 
-func (s *NodePool) AddContainer(nodeip string, port string) {
+func (s *NodePool) AddContainer(nodeip string, port string, containerId string) {
 	containerUrl, err := url.Parse("http://" + nodeip + ":" + port)
 	if err != nil {
 		log.Fatal(err)
@@ -34,12 +35,26 @@ func (s *NodePool) AddContainer(nodeip string, port string) {
 	s.backends = append(s.backends, &Backend{
 		URL:          containerUrl,
 		ReverseProxy: proxy,
+		ContainerID:  containerId,
 	})
 }
 
-func (s *NodePool) DeleteContainer(nodeip *string, port *string) {
+func (s *NodePool) DeleteContainer() {
+	if len(s.backends) != 0 {
+		next := int(atomic.AddUint64(&s.curInd, uint64(1)) % uint64(len(s.backends)))
+
+		atomic.StoreUint64(&s.curInd, uint64(next))
+
+		mux.Lock()
+		s.backends = append(s.backends[:next], s.backends[next+1:]...)
+		mux.Unlock()
+	}
+}
+
+func (s *NodePool) DeleteSpecificContainer(ContainerId string) {
+	fmt.Println("Deleting container with id: ", ContainerId)
 	for i, b := range s.backends {
-		if b.URL.Host == fmt.Sprintf("%s:%s", *nodeip, *port) {
+		if b.ContainerID == ContainerId {
 			mux.Lock()
 			s.backends = append(s.backends[:i], s.backends[i+1:]...)
 			mux.Unlock()
