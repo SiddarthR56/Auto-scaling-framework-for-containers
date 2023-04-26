@@ -16,15 +16,30 @@ bucket = 'TrainingData'
 tag = '_measurement'
 tag_val = 'metrics'
 
-def get_data():
-    tables = client.query_api().query(f'from(bucket:"{bucket}") |> range(start: {start}) \
-                                                                |> filter(fn: (r) => r.{tag} == "{tag_val}" and r.id == "{container}") \
-                                                                |> truncateTimeColumn(unit: 1s) \
-                                                                |> sort(columns: ["_time"])')
+def get_new_data():
+    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
+                                            |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
+                                            |> truncateTimeColumn(unit: 1s) \
+                                            |> sort(columns: ["_time"]) \
+                                            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
+    
+    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
+                                        |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
+                                        |> truncateTimeColumn(unit: 1s) \
+                                        |> sort(columns: ["_time"]) \
+                                        |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
 
-    data = convert_tables_to_dict(tables)
-    return [(entry, (data[entry]['cpuUsage'], data[entry]['memUsage'])) for entry in sorted(data)]
+    result = defaultdict(dict)
 
+    for table in cpu_mem_tables:
+        for row in table:
+            result[row["_time"]]['cpu'] = row['cpu']
+            result[row["_time"]]['mem'] = row['mem']
+    for table in rps_tables:
+        for row in table:
+            result[row["_time"]]['RPS'] = row['RPS']
+
+    return numpy.array([(entry, (result[entry]['cpu'], result[entry]['RPS'], result[entry]['mem'])) for entry in sorted(result)])
 
 def convert_tables_to_dict(tables):
     data = defaultdict(dict)
