@@ -107,3 +107,35 @@ func NodeDeleteContainer(container_id string, nodeip string, nodeport string) er
 	return nil
 
 }
+
+func UpdateContainers(c echo.Context) error {
+
+	params := new(contracts.ContainerModifyRequest)
+
+	if err := c.Bind(params); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	Application := params.AppName
+	ReqContainerNumber := params.ContainerNum
+
+	existing_containers := common.Node_pool.GetContainers()
+
+	if existing_containers < *ReqContainerNumber {
+		for i := 0; i < *ReqContainerNumber-existing_containers; i++ {
+			node := common.Node_List.GetNextPeer()
+			NodeCreateContainer(*Application, *node.NodeIp, common.WNODE_PORT)
+		}
+
+	} else if existing_containers > *ReqContainerNumber {
+		for i := 0; i < existing_containers-*ReqContainerNumber; i++ {
+			node := common.Node_pool.GetNextPeer()
+			common.Node_pool.DeleteSpecificContainer(node.ContainerID)
+
+			go NodeDeleteContainer(node.ContainerID, common.ContainerList[node.ContainerID], common.WNODE_PORT)
+		}
+	}
+
+	return c.JSON(http.StatusOK, "Containers Updated")
+
+}

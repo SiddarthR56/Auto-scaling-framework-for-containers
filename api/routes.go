@@ -23,6 +23,8 @@ func SetApiRoutes(e *echo.Echo) {
 
 	api.POST("/containerdelete", handlers.ContainerDelete)
 
+	api.POST("/updatecontainers", handlers.UpdateContainers)
+
 	e.GET("/*", handlers.ProxyRequest)
 	e.POST("/*", handlers.ProxyRequest)
 

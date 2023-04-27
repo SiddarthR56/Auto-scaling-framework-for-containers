@@ -39,6 +39,10 @@ func (s *NodePool) AddContainer(nodeip string, port string, containerId string) 
 	})
 }
 
+func (s *NodePool) GetContainers() int {
+	return len(s.backends)
+}
+
 func (s *NodePool) DeleteContainer() {
 	if len(s.backends) != 0 {
 		next := int(atomic.AddUint64(&s.curInd, uint64(1)) % uint64(len(s.backends)))
@@ -96,7 +100,7 @@ func (s *NodePool) GetNextPeer() *Backend {
 func Lb(w http.ResponseWriter, r *http.Request) {
 
 	peer := Node_pool.GetNextPeer()
-//	fmt.Println(peer)
+	//	fmt.Println(peer)
 	if peer != nil {
 		peer.ReverseProxy.ServeHTTP(w, r)
 		return
