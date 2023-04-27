@@ -4,7 +4,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from model import BILSTM
 from collections import defaultdict
 import numpy as np
+from requests import get, post
 import time
+import math
 
 app = Flask(__name__)
 
@@ -21,13 +23,13 @@ tag_val = 'metrics'
 model = BILSTM()
 
 def get_new_data():
-    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
+    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5m) \
                                             |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
                                             |> truncateTimeColumn(unit: 1s) \
                                             |> sort(columns: ["_time"]) \
                                             |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
     
-    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
+    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5m) \
                                         |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
                                         |> truncateTimeColumn(unit: 1s) \
                                         |> sort(columns: ["_time"]) \
@@ -50,27 +52,38 @@ def scale_containers(pdata, cdata):
     #add formula to scale containers
     print("Scaling containers")
     print(pdata, cdata)
-    pass
+    predectedCPU = pdata[0][0]
+    currentCPU = cdata
+    response = get('http://152.7.179.7:8000/admin/getcontainerscount')
+    currReplicas = int(response.text)
+    desiredReplicas = max(min(5, math.ceil(currReplicas * (predectedCPU/50))), 1)
+    s = "" + str(desiredReplicas) + " " + str(predectedCPU) + "\n"
+    file = open('Prediction.txt', 'a+')
+    file.write(s)
+    x = post('http://152.7.179.7:8000/admin/updatecontainers', json = {
+    "app_name":"rubis",
+    "container_num": desiredReplicas
+    })
 
 def process_data(data):
     try:
-        reshaped_data = data.reshape((5, 8, 3))
-        avg_data = np.mean(reshaped_data, axis=1)
-        return data
+        reshaped_data = data.reshape((5, 4, 3))
+        avg_data = np.max(reshaped_data, axis=1)
+        return avg_data
     except:
         print("Invalid data shape")
-        return data
+        return None
     
 
 def monitor():
     print('Fetching Influx DB data...')
     data = get_new_data()
     data = process_data(data)
+    if data is None:
+        return
     cpu = model.predict(data)
     scale_containers(cpu, data[-1][0])
     print(cpu)
-
-
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(monitor, 'interval', minutes=1)
