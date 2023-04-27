@@ -1,7 +1,9 @@
 from flask import Flask
+from influxdb_client import InfluxDBClient
 from apscheduler.schedulers.background import BackgroundScheduler
 from model import BILSTM
 from collections import defaultdict
+import numpy as np
 import time
 
 app = Flask(__name__)
@@ -15,6 +17,8 @@ client = InfluxDBClient(url=my_url, org=my_org, username=my_uname, password=my_p
 bucket = 'TrainingData'
 tag = '_measurement'
 tag_val = 'metrics'
+
+model = BILSTM()
 
 def get_new_data():
     cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -10m) \
@@ -39,27 +43,37 @@ def get_new_data():
         for row in table:
             result[row["_time"]]['RPS'] = row['RPS']
 
-    return numpy.array([(entry, (result[entry]['cpu'], result[entry]['RPS'], result[entry]['mem'])) for entry in sorted(result)])
-
-def convert_tables_to_dict(tables):
-    data = defaultdict(dict)
-    for table in tables:
-        for row in table:
-            data[row['_time']][row['_field']] = row['_value']
-    return data
+    return np.array([[result[entry]['cpu'], result[entry]['RPS'], result[entry]['mem']] for entry in sorted(result)])
 
 
-def scale_containers(data):
+def scale_containers(pdata, cdata):
+    #add formula to scale containers
+    print("Scaling containers")
+    print(pdata, cdata)
     pass
 
+def process_data(data):
+    try:
+        reshaped_data = data.reshape((5, 8, 3))
+        avg_data = np.mean(reshaped_data, axis=1)
+        return data
+    except:
+        print("Invalid data shape")
+        return data
+    
 
 def monitor():
     print('Fetching Influx DB data...')
-    data = get_data()
+    data = get_new_data()
+    data = process_data(data)
+    cpu = model.predict(data)
+    scale_containers(cpu, data[-1][0])
+    print(cpu)
+
 
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(monitor, 'interval', minutes=5)
+scheduler.add_job(monitor, 'interval', minutes=1)
 scheduler.start()
 
 if __name__ == '__main__':

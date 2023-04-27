@@ -6,6 +6,7 @@ from keras.layers import Bidirectional
 from keras.layers import Dropout, LSTM, RepeatVector
 from keras.layers import Dense, BatchNormalization
 from tensorflow.keras.optimizers import Adam
+from sklearn.preprocessing import StandardScaler
 
 Window = 5
 
@@ -13,8 +14,11 @@ class BILSTM:
 
     def __init__(self) -> None:
         self.model = self.build()
-        if os.path.exists('ml/model.pkl'):
-            self.load_model('ml/model.pkl')
+        if os.path.exists('./model.pkl'):
+            self.load_model('./model.pkl')
+        self.scr = pickle.load(open('./scr.pkl', 'rb'))
+        self.scc = pickle.load(open('./scc.pkl', 'rb'))
+        self.scm = pickle.load(open('./scm.pkl', 'rb'))
 
 
     def build(self):
@@ -34,8 +38,20 @@ class BILSTM:
     def load_model(self, path):
         self.model = pickle.load(open(path, 'rb'))
 
+    def normalise_data(self, data):
+        cpu = data[:, 0]
+        mem = data[:, 2]
+        rps = data[:, 1]
+
+        cpu = self.scc.transform(cpu.reshape(-1, 1))
+        mem = self.scm.transform(mem.reshape(-1, 1))
+        rps = self.scr.transform(rps.reshape(-1, 1))
+
+        return np.concatenate((cpu, rps, mem), axis=1)
+
     def predict(self, X_test):
-        return self.model.predict(np.array([X_test]))[0]
+        X_test = self.normalise_data(X_test)
+        return self.scc.inverse_transform(self.model.predict(np.array([X_test]))[0])
     
     def save_model(self, path):
         pickle.dump(self.model, open(path, 'wb'))
