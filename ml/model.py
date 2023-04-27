@@ -15,15 +15,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import keras
 
-Window = 5
+Window = 3
 
 class BILSTM:
 
     def __init__(self) -> None:
         self.model = self.build()
 
-        if os.path.exists('./kmodel.h5'):
-            self.load_model('./kmodel.h5')
+        if os.path.exists('./w4model.h5'):
+            self.load_model('./w4model.h5')
         
         self.scr = pickle.load(open('./scr.pkl', 'rb'))
         self.scc = pickle.load(open('./scc.pkl', 'rb'))
@@ -38,15 +38,14 @@ class BILSTM:
         # model.add(Dense(15, activation="elu"))
         # model.add(Dropout(0.2))
         # model.add(Dense(units=1, activation="elu"))
-        neurons = 32
+        neurons = 8
         dropout = 0.2
 
         model = keras.models.Sequential()
         model.add(Bidirectional(keras.layers.LSTM(units=neurons, input_shape=( Window, 3))))
         model.add(keras.layers.RepeatVector(n=Window))
-        model.add(Bidirectional(keras.layers.LSTM(units=neurons//2)))
-        model.add(Dense(8, activation="elu"))
-        model.add(Dropout(0.2))
+        model.add(Bidirectional(keras.layers.LSTM(units=neurons-2)))
+        model.add(Dense(4, activation="elu"))
         model.add(keras.layers.Dense(units=1, activation="elu"))
 
         # adamOpt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.0, amsgrad=False)
@@ -58,12 +57,12 @@ class BILSTM:
         self.model.build(input_shape = (None, Window, 3))
         self.model.load_weights(path)
         
-    def normalise_data(self, data):
+    def normalise_data(self, data, replicas):
         print(data.shape)
         print(data)
         cpu = data[:, 0]
         mem = data[:, 2]
-        rps = data[:, 1]
+        rps = data[:, 1]/replicas
 
         cpu = self.scc.transform(cpu.reshape(-1, 1))
         mem = self.scm.transform(mem.reshape(-1, 1))
@@ -71,9 +70,13 @@ class BILSTM:
 
         return np.concatenate((cpu, rps, mem), axis=1)
 
-    def predict(self, X_test):
-        X_test = self.normalise_data(X_test)
-        print(self.model.predict(np.array([X_test]))[0])
+    def predict(self, X_test, replicas):
+        X_test = self.normalise_data(X_test, replicas)
+        print(X_test[-1][0])
+        try:
+            print(self.model.predict(np.array([X_test]))[0][0]/X_test[-1][0])
+        except:
+            pass
         return self.scc.inverse_transform([self.model.predict(np.array([X_test]))[0]])
     
     def save_model(self, path):
