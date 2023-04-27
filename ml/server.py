@@ -93,7 +93,7 @@ def scale_containers(pdata, cdata):
 def process_data(data):
     try:
         reshaped_data = data.reshape((data.shape[0]/4, 4, 3))
-        avg_data = np.max(reshaped_data, axis=1)
+        avg_data = np.mean(reshaped_data, axis=1)
         return avg_data
     except:
         print("Invalid data shape")
