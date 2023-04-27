@@ -108,6 +108,30 @@ func NodeDeleteContainer(container_id string, nodeip string, nodeport string) er
 
 }
 
+func NodeDeleteContainerSync(container_id string, nodeip string, nodeport string) error {
+
+	url := fmt.Sprintf("http://%s:%s/container/delete/%s", nodeip, nodeport, container_id)
+
+	// request := map[string]string{
+	// 	"container_id": container_id,
+	// }
+
+	// req, err := json.Marshal(request)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+
+	_, err := common.MakeGetRequest(url)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	fmt.Println("Container " + container_id + " deleted")
+
+	return nil
+
+}
+
 func UpdateContainers(c echo.Context) error {
 
 	params := new(contracts.ContainerModifyRequest)
