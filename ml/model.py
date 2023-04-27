@@ -1,4 +1,9 @@
+def warn(*args, **kwargs):
+    pass
+import warnings
+warnings.warn = warn
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import pickle
 import numpy as np
 from keras.models import Sequential
@@ -7,6 +12,7 @@ from keras.layers import Dropout, LSTM, RepeatVector
 from keras.layers import Dense, BatchNormalization
 from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 import keras
 
 Window = 5
@@ -73,11 +79,31 @@ class BILSTM:
     def save_model(self, path):
         pickle.dump(self.model, open(path, 'wb'))
 
-    def train(self, model, X_train, y_train, X_test, y_test):
-        model.fit(X_train, y_train,
+    def create_windows(self, data, windsize = Window):
+        wdata = []
+        ydata = []
+        for i in range(windsize, len(data)-8):
+            idata = []
+            for j in range(windsize, 0, -1):
+                idata.append(data[i - j][:2])
+            wdata.append(idata)
+            ydata.append(data[i+8][0])
+        return np.array(wdata), np.array(ydata)
+
+    def train(self, model, X_train):
+        norm_data = self.normalise_data(X_train)
+
+        X, y = self.create_windows(norm_data)
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+        self.model.fit(X_train, y_train,
                 batch_size=64,
                 epochs=100,
                 validation_data=(X_test, y_test))
+        
+        self.save_model('./kmodel1.h5')
+
         return model
     
 

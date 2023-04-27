@@ -47,6 +47,31 @@ def get_new_data():
 
     return np.array([[result[entry]['cpu'], result[entry]['RPS'], result[entry]['mem']] for entry in sorted(result)])
 
+def get_train_data():
+    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5h) \
+                                            |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
+                                            |> truncateTimeColumn(unit: 1s) \
+                                            |> sort(columns: ["_time"]) \
+                                            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
+    
+    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5h) \
+                                        |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
+                                        |> truncateTimeColumn(unit: 1s) \
+                                        |> sort(columns: ["_time"]) \
+                                        |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
+
+    result = defaultdict(dict)
+
+    for table in cpu_mem_tables:
+        for row in table:
+            result[row["_time"]]['cpu'] = row['cpu']
+            result[row["_time"]]['mem'] = row['mem']
+    for table in rps_tables:
+        for row in table:
+            result[row["_time"]]['RPS'] = row['RPS']
+
+    return np.array([[result[entry]['cpu'], result[entry]['RPS'], result[entry]['mem']] for entry in sorted(result)])
+
 
 def scale_containers(pdata, cdata):
     #add formula to scale containers
@@ -67,7 +92,7 @@ def scale_containers(pdata, cdata):
 
 def process_data(data):
     try:
-        reshaped_data = data.reshape((5, 4, 3))
+        reshaped_data = data.reshape((data.shape[0]/4, 4, 3))
         avg_data = np.max(reshaped_data, axis=1)
         return avg_data
     except:
@@ -85,9 +110,20 @@ def monitor():
     scale_containers(cpu, data[-1][0])
     print(cpu)
 
+def train():
+    print('Fetching Influx DB data for training...')
+    data = get_train_data()
+    data = process_data(data)
+    if data is None:
+        return
+    model.train(data)
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(monitor, 'interval', minutes=1)
 scheduler.start()
+
+scheduler_t = BackgroundScheduler()
+scheduler_t.add_job(train, 'interval', minutes=300)
 
 if __name__ == '__main__':
     app.run()
