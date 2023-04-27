@@ -20,16 +20,18 @@ bucket = 'TrainingData'
 tag = '_measurement'
 tag_val = 'metrics'
 
+currReplicas = 1
+
 model = BILSTM()
 
 def get_new_data():
-    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5m) \
+    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -3m) \
                                             |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
                                             |> truncateTimeColumn(unit: 1s) \
                                             |> sort(columns: ["_time"]) \
                                             |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
     
-    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5m) \
+    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -3m) \
                                         |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
                                         |> truncateTimeColumn(unit: 1s) \
                                         |> sort(columns: ["_time"]) \
@@ -74,6 +76,7 @@ def get_train_data():
 
 
 def scale_containers(pdata, cdata):
+    global currReplicas
     #add formula to scale containers
     print("Scaling containers")
     print(pdata, cdata)
@@ -92,7 +95,7 @@ def scale_containers(pdata, cdata):
 
 def process_data(data):
     try:
-        reshaped_data = data.reshape((data.shape[0]/4, 4, 3))
+        reshaped_data = data.reshape((data.shape[0]//4, 4, 3))
         avg_data = np.mean(reshaped_data, axis=1)
         return avg_data
     except:
@@ -101,12 +104,13 @@ def process_data(data):
     
 
 def monitor():
+    global currReplicas
     print('Fetching Influx DB data...')
     data = get_new_data()
     data = process_data(data)
     if data is None:
         return
-    cpu = model.predict(data)
+    cpu = model.predict(data, currReplicas)
     scale_containers(cpu, data[-1][0])
     print(cpu)
 
