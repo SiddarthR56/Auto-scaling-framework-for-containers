@@ -76,6 +76,10 @@ func ContainerRestart(c echo.Context) error {
 
 	common.Node_pool.DeleteSpecificContainer(*containerId)
 
+	node := common.Node_List.GetNextPeer()
+
+	NodeCreateContainer("rubis", *node.NodeIp, common.WNODE_PORT)
+
 	go NodeDeleteContainer(*containerId, common.ContainerList[*containerId], common.WNODE_PORT)
 
 	return nil
