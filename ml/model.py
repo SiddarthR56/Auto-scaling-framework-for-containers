@@ -61,7 +61,7 @@ class BILSTM:
         print(data)
         cpu = data[:, 0]
         mem = data[:, 2]
-        rps = data[:, 1]/replicas
+        rps = data[:, 1] #/replicas
 
         # print(cpu)
 
