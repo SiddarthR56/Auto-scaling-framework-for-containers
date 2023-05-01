@@ -15,19 +15,19 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import keras
 
-Window = 3
+Window = 5
 
 class BILSTM:
 
     def __init__(self) -> None:
         self.model = self.build()
 
-        if os.path.exists('./w4model.h5'):
-            self.load_model('./w4model.h5')
+        if os.path.exists('./w12model.h5'):
+            self.load_model('./w12model.h5')
         
-        self.scr = pickle.load(open('./scr.pkl', 'rb'))
-        self.scc = pickle.load(open('./scc.pkl', 'rb'))
-        self.scm = pickle.load(open('./scm.pkl', 'rb'))
+        self.scr = pickle.load(open('./scr(4).pkl', 'rb'))
+        self.scc = pickle.load(open('./scc(4).pkl', 'rb'))
+        self.scm = pickle.load(open('./scm(4).pkl', 'rb'))
 
 
     def build(self):
@@ -38,15 +38,14 @@ class BILSTM:
         # model.add(Dense(15, activation="elu"))
         # model.add(Dropout(0.2))
         # model.add(Dense(units=1, activation="elu"))
-        neurons = 8
-        dropout = 0.2
 
-        model = keras.models.Sequential()
-        model.add(Bidirectional(keras.layers.LSTM(units=neurons, input_shape=( Window, 3))))
-        model.add(keras.layers.RepeatVector(n=Window))
-        model.add(Bidirectional(keras.layers.LSTM(units=neurons-2)))
-        model.add(Dense(4, activation="elu"))
-        model.add(keras.layers.Dense(units=1, activation="elu"))
+
+        model = Sequential()
+        model.add(Bidirectional(LSTM(units=5, return_sequences=True, activation="elu"), input_shape=( 5, 2)))
+        model.add(Bidirectional(LSTM(units=3, activation="elu")))
+        # model.add(Dense(units=8, activation="elu"))
+        model.add(Dense(units=1, activation="elu"))
+        model.build(input_shape=(None,  5, 2))
 
         # adamOpt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.0, amsgrad=False)
         # model.compile(loss='mean_squared_error', optimizer=adamOpt, metrics=['mae'])
@@ -54,29 +53,34 @@ class BILSTM:
         return model
     
     def load_model(self, path):
-        self.model.build(input_shape = (None, Window, 3))
+        self.model.build(input_shape = (None, Window, 2))
         self.model.load_weights(path)
         
     def normalise_data(self, data, replicas):
-        print(data.shape)
+        # print(data.shape)
         print(data)
         cpu = data[:, 0]
         mem = data[:, 2]
         rps = data[:, 1]/replicas
 
-        cpu = self.scc.transform(cpu.reshape(-1, 1))
-        mem = self.scm.transform(mem.reshape(-1, 1))
-        rps = self.scr.transform(rps.reshape(-1, 1))
+        # print(cpu)
 
-        return np.concatenate((cpu, rps, mem), axis=1)
+        cpu = self.scc.transform(cpu.reshape(-1, 1))
+        # print(cpu)
+        mem = self.scm.transform(mem.reshape(-1, 1))
+        rps = self.scr.transform(rps.reshape(-1, 1))/replicas
+
+        # print(np.concatenate((cpu, rps, mem), axis=1))
+
+        return np.concatenate((cpu, rps), axis=1)
 
     def predict(self, X_test, replicas):
+        orig = X_test[-1][0]
         X_test = self.normalise_data(X_test, replicas)
-        print(X_test[-1][0])
-        try:
-            print(self.model.predict(np.array([X_test]))[0][0]/X_test[-1][0])
-        except:
-            pass
+        # try:
+        #     print(self.model.predict(np.array([X_test]))[0][0]/X_test[-1][0])
+        # except:
+        #     pass
         return self.scc.inverse_transform([self.model.predict(np.array([X_test]))[0]])
     
     def save_model(self, path):

@@ -25,13 +25,13 @@ currReplicas = 1
 model = BILSTM()
 
 def get_new_data():
-    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -3m) \
+    cpu_mem_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5m) \
                                             |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "mem" or r._field == "cpu")) \
                                             |> truncateTimeColumn(unit: 1s) \
                                             |> sort(columns: ["_time"]) \
                                             |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")')
     
-    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -3m) \
+    rps_tables = client.query_api().query('from(bucket:"TrainingData") |> range(start: -5m) \
                                         |> filter(fn: (r) => r._measurement == "metrics" and r.type == "agrigate" and (r._field == "RPS")) \
                                         |> truncateTimeColumn(unit: 1s) \
                                         |> sort(columns: ["_time"]) \
@@ -123,7 +123,7 @@ def train():
     model.train(data)
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(monitor, 'interval', minutes=1)
+scheduler.add_job(monitor, 'interval', seconds=45)
 scheduler.start()
 
 scheduler_t = BackgroundScheduler()
