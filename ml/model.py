@@ -22,8 +22,8 @@ class BILSTM:
     def __init__(self) -> None:
         self.model = self.build()
 
-        if os.path.exists('./w12model.h5'):
-            self.load_model('./w12model.h5')
+        if os.path.exists('./bilstm_model.h5'):
+            self.load_model('./bilstm_model.h5')
         
         self.scr = pickle.load(open('./scr(4).pkl', 'rb'))
         self.scc = pickle.load(open('./scc(4).pkl', 'rb'))
@@ -31,21 +31,12 @@ class BILSTM:
 
 
     def build(self):
-        # model = Sequential()
-        # model.add(Bidirectional(LSTM(units=64, input_shape=( Window, 3))))
-        # model.add(RepeatVector(n=Window))
-        # model.add(Bidirectional(LSTM(units=64)))
-        # model.add(Dense(15, activation="elu"))
-        # model.add(Dropout(0.2))
-        # model.add(Dense(units=1, activation="elu"))
-
 
         model = Sequential()
-        model.add(Bidirectional(LSTM(units=5, return_sequences=True, activation="elu"), input_shape=( 5, 2)))
+        model.add(Bidirectional(LSTM(units=5, return_sequences=True, activation="elu"), input_shape=( 5, 3)))
         model.add(Bidirectional(LSTM(units=3, activation="elu")))
-        # model.add(Dense(units=8, activation="elu"))
         model.add(Dense(units=1, activation="elu"))
-        model.build(input_shape=(None,  5, 2))
+        model.build(input_shape=(None,  5, 3))
 
         # adamOpt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.0, amsgrad=False)
         # model.compile(loss='mean_squared_error', optimizer=adamOpt, metrics=['mae'])
@@ -61,18 +52,18 @@ class BILSTM:
         print(data)
         cpu = data[:, 0]
         mem = data[:, 2]
-        rps = data[:, 1] #/replicas
+        rps = data[:, 1]/replicas
 
-        # print(cpu)
 
         cpu = self.scc.transform(cpu.reshape(-1, 1))
-        # print(cpu)
+
         mem = self.scm.transform(mem.reshape(-1, 1))
-        rps = self.scr.transform(rps.reshape(-1, 1))/replicas
+
+        rps = self.scr.transform(rps.reshape(-1, 1))
 
         # print(np.concatenate((cpu, rps, mem), axis=1))
 
-        return np.concatenate((cpu, rps), axis=1)
+        return np.concatenate((cpu, rps, mem), axis=1)
 
     def predict(self, X_test, replicas):
         orig = X_test[-1][0]
